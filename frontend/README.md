@@ -57,7 +57,7 @@ Los médicos, a su vez, podrán administrar su disponibilidad, ver turnos asigna
 
 ## 📁 Repositorio
 
-[🔗 Enlace al repositorio en GitHub](https://github.com/oscarmatiasg/docturn)  
+[🔗 Enlace al repositorio en GitHub](https://github.com/oscarmatiasg/DocTurn)  
 
 ---
 
