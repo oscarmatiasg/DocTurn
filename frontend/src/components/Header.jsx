@@ -15,7 +15,7 @@ const Header = () => {
       </div>
       
       <div>
-        <img src={assets.header_img} alt="" />
+        <img src={assets.doc_header} alt="" />
       </div>
     </div>
 
