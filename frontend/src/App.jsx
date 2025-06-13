@@ -5,12 +5,12 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import Login from './pages/Login'
 import Doctors from './pages/Doctors'
-import MyAppointments from './pages/MyAppointments'
+import Turns from './pages/Turns'
 import MyProfile from './pages/MyProfile'
-import Appointments from './pages/Appointments'
+import MyTurn from './pages/MyTurn'
 import Navb from './components/Navb'
-const App = () => {
 
+const App = () => {
   return (
     <div className='mx-4 sm:mx-[10%]'>
       <Navb />
@@ -21,11 +21,10 @@ const App = () => {
         <Route path='/login' element={<Login />} />
         <Route path='/doctors' element={<Doctors />} />
         <Route path='/doctors/:specialty' element={<Doctors />} />
-        <Route path='/my-appointments' element={<MyAppointments />} />
+        <Route path='/my-turn' element={<MyTurn />} />
         <Route path='/my-profile' element={<MyProfile />} />
-        <Route path='/appointments/:docId' element={<Appointments />} />
+        <Route path='/turns/:docId' element={<Turns />} />
       </Routes>
-
     </div>
   )
 }

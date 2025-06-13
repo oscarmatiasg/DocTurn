@@ -38,10 +38,15 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Botón */}
-        <a href='#speciality' className="bg-white text-gray-800 px-8 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors duration-4 00 shadow-lg">
-          Reservar un turno
-        </a>
+        {/* Contenedor del botón con ajustes de posición */}
+        <div className="w-full flex justify-center md:justify-end">
+          <a 
+            href='#speciality' 
+            className="bg-white text-gray-800 px-8 py-3 rounded-full font-medium hover:bg-gray-100 cursor-pointer hover:translate-y-[10px] transition-all duration-300"
+          >
+            Reservar un turno
+          </a>
+        </div>
       </div>
 
        {/* Imagen del doctor */}
