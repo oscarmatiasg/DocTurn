@@ -1,47 +1,39 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../context/Appcontex'
 import axios from 'axios'
+import React, { useContext, useState } from 'react'
+import { DoctorContext } from '../context/DoctorContext'
+import { AdminContext } from '../context/AdminContext'
 import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
-  const [state, setState] = useState('Sign Up')
-  const [name, setName] = useState('')
+  const [state, setState] = useState('Admin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const navigate = useNavigate()
-  const { backendUrl, token, setToken } = useContext(AppContext)
+  const backendUrl = import.meta.env.VITE_BACKEND_URL
+  const { setDToken } = useContext(DoctorContext)
+  const { setAToken } = useContext(AdminContext)
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    if (state === 'Sign Up') {
-      const { data } = await axios.post(backendUrl + '/api/user/register', { name, email, password })
-
+    if (state === 'Admin') {
+      const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password })
       if (data.success) {
-        localStorage.setItem('token', data.token)
-        setToken(data.token)
+        setAToken(data.token)
+        localStorage.setItem('aToken', data.token)
       } else {
         toast.error(data.message)
       }
     } else {
-      const { data } = await axios.post(backendUrl + '/api/user/login', { email, password })
-
+      const { data } = await axios.post(backendUrl + '/api/doctor/login', { email, password })
       if (data.success) {
-        localStorage.setItem('token', data.token)
-        setToken(data.token)
+        setDToken(data.token)
+        localStorage.setItem('dToken', data.token)
       } else {
         toast.error(data.message)
       }
     }
   }
-
-  useEffect(() => {
-    if (token) {
-      navigate('/')
-    }
-  }, [token])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4">
@@ -50,46 +42,45 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {state === 'Sign Up' ? 'Crear Cuenta' : 'Iniciar Sesión'}
+            Panel de {state === 'Admin' ? 'Administración' : 'Médico'}
           </h1>
           <p className="text-gray-600">
-            {state === 'Sign Up' 
-              ? 'Únete a DocTurn para reservar tus citas médicas' 
-              : 'Accede a tu cuenta para gestionar tus citas'
-            }
+            Accede al panel de gestión de DocTurn
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={onSubmitHandler} className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           <div className="space-y-6">
-            {/* Name Field - Only for Sign Up */}
-            {state === 'Sign Up' && (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Nombre Completo
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <input
-                    onChange={(e) => setName(e.target.value)}
-                    value={name}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    type="text"
-                    placeholder="Ingresa tu nombre completo"
-                    required
-                  />
-                </div>
-              </div>
-            )}
+            {/* Role Selector */}
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setState('Admin')}
+                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                  state === 'Admin'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Administrador
+              </button>
+              <button
+                type="button"
+                onClick={() => setState('Doctor')}
+                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                  state === 'Doctor'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Médico
+              </button>
+            </div>
 
             {/* Email Field */}
             <div className="space-y-2">
@@ -140,49 +131,15 @@ const Login = () => {
               type="submit"
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 shadow-sm hover:shadow-md"
             >
-              {state === 'Sign Up' ? 'Crear Cuenta' : 'Iniciar Sesión'}
+              Iniciar Sesión
             </button>
-
-            {/* Toggle State */}
-            <div className="text-center">
-              {state === 'Sign Up' ? (
-                <p className="text-gray-600">
-                  ¿Ya tienes una cuenta?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setState('Login')}
-                    className="text-blue-600 hover:text-blue-700 font-medium underline transition-colors duration-200"
-                  >
-                    Inicia sesión aquí
-                  </button>
-                </p>
-              ) : (
-                <p className="text-gray-600">
-                  ¿No tienes una cuenta?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setState('Sign Up')}
-                    className="text-blue-600 hover:text-blue-700 font-medium underline transition-colors duration-200"
-                  >
-                    Regístrate aquí
-                  </button>
-                </p>
-              )}
-            </div>
           </div>
         </form>
 
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            Al continuar, aceptas nuestros{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-700 underline">
-              Términos de Servicio
-            </a>{' '}
-            y{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-700 underline">
-              Política de Privacidad
-            </a>
+            Acceso restringido para administradores y médicos de DocTurn
           </p>
         </div>
       </div>
