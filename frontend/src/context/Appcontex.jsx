@@ -30,6 +30,67 @@ const AppProvider = (props) => {
         }
     }
 
+    // Function to get user appointments
+    const getUserAppointments = async () => {
+        try {
+            if (token) {
+                const { data } = await axios.get(backendUrl + '/api/user/appointments', { 
+                    headers: { token } 
+                })
+                if (data.success) {
+                    return data.appointments
+                }
+            }
+            return []
+        } catch (error) {
+            console.log(error)
+            toast.error('Error loading appointments')
+            return []
+        }
+    }
+
+    // Function to cancel appointment
+    const cancelAppointment = async (appointmentId) => {
+        try {
+            const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', 
+                { appointmentId }, 
+                { headers: { token } }
+            )
+            if (data.success) {
+                toast.success(data.message)
+                return true
+            } else {
+                toast.error(data.message)
+                return false
+            }
+        } catch (error) {
+            console.log(error)
+            toast.error('Error cancelling appointment')
+            return false
+        }
+    }
+
+    // Function to simulate payment
+    const simulatePayment = async (appointmentId, paymentMethod = 'card') => {
+        try {
+            const { data } = await axios.post(backendUrl + '/api/user/simulate-payment', 
+                { appointmentId, paymentMethod }, 
+                { headers: { token } }
+            )
+            if (data.success) {
+                toast.success(data.message)
+                return true
+            } else {
+                toast.error(data.message)
+                return false
+            }
+        } catch (error) {
+            console.log(error)
+            toast.error('Error processing payment')
+            return false
+        }
+    }
+
     // Load user data when token changes
     useEffect(() => {
         if (token) {
@@ -46,7 +107,10 @@ const AppProvider = (props) => {
         setToken,
         userData,
         setUserData,
-        loadUserProfileData
+        loadUserProfileData,
+        getUserAppointments,
+        cancelAppointment,
+        simulatePayment
     }
 
     return (

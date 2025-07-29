@@ -1,7 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { AppContext } from '../context/Appcontex'
-import { assets } from '../assets/assets'
+import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { AppContext } from '../context/Appcontex';
+import { assets } from '../assets/assets';
+import { toast } from 'react-toastify';
 
 const Appointment = () => {
     const { docId } = useParams()
@@ -26,80 +27,76 @@ const Appointment = () => {
     }
 
     const getAvailableSolts = async () => {
-        setDocSlots([])
-
-        // getting current date
-        let today = new Date()
-        let slotsArray = []
+        setDocSlots([]);
+        let today = new Date();
+        let slotsArray = [];
+        // Leer turnos ocupados de localStorage
+        const bookedSlots = JSON.parse(localStorage.getItem(`bookedSlots_${docId}`) || '[]');
 
         for (let i = 0; i < 7; i++) {
-            // getting date with index 
-            let currentDate = new Date(today)
-            currentDate.setDate(today.getDate() + i)
-
-            // setting end time of the date with index
-            let endTime = new Date()
-            endTime.setDate(today.getDate() + i)
-            endTime.setHours(21, 0, 0, 0)
-
-            // setting hours - domingo (0) queda en blanco
+            let currentDate = new Date(today);
+            currentDate.setDate(today.getDate() + i);
+            let endTime = new Date();
+            endTime.setDate(today.getDate() + i);
+            endTime.setHours(21, 0, 0, 0);
             if (currentDate.getDay() === 0) {
-                // Domingo - agregar array vacío
-                slotsArray.push([])
-                continue
+                slotsArray.push([]);
+                continue;
             }
-
             if (today.getDate() === currentDate.getDate()) {
-                currentDate.setHours(currentDate.getHours() > 10 ? currentDate.getHours() + 1 : 10)
-                currentDate.setMinutes(currentDate.getMinutes() > 30 ? 30 : 0)
+                currentDate.setHours(currentDate.getHours() > 10 ? currentDate.getHours() + 1 : 10);
+                currentDate.setMinutes(currentDate.getMinutes() > 30 ? 30 : 0);
             } else {
-                currentDate.setHours(10)
-                currentDate.setMinutes(0)
+                currentDate.setHours(10);
+                currentDate.setMinutes(0);
             }
-
             let timeSlots = [];
-
             while (currentDate < endTime) {
                 let formattedTime = currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                let day = currentDate.getDate()
-                let month = currentDate.getMonth() + 1
-                let year = currentDate.getFullYear()
-
-                const slotDate = day + "_" + month + "_" + year
-                const slotTime = formattedTime
-
-                // Simulando slots disponibles (en el proyecto real vendrían del backend)
-                const isSlotAvailable = Math.random() > 0.3 // 70% de probabilidad de estar disponible
-
+                let day = currentDate.getDate();
+                let month = currentDate.getMonth() + 1;
+                let year = currentDate.getFullYear();
+                const slotDate = day + "_" + month + "_" + year;
+                const slotTime = formattedTime;
+                // Verificar si el turno ya fue reservado y pagado
+                const isBooked = bookedSlots.some(bs => bs.slotDate === slotDate && bs.slotTime === slotTime);
+                // Simular disponibilidad solo si no está reservado
+                const isSlotAvailable = !isBooked && Math.random() > 0.3;
                 if (isSlotAvailable) {
-                    // Add slot to array
                     timeSlots.push({
                         datetime: new Date(currentDate),
                         time: formattedTime
-                    })
+                    });
                 }
-
-                // Increment current time by 30 minutes
                 currentDate.setMinutes(currentDate.getMinutes() + 30);
             }
-
-            slotsArray.push(timeSlots)
+            slotsArray.push(timeSlots);
         }
-
-        setDocSlots(slotsArray)
+        setDocSlots(slotsArray);
     }
 
     const bookAppointment = async () => {
-        // Simulación de reserva (en el proyecto real se conectaría al backend)
-        console.log('Reservando cita:', {
-            doctorId: docId,
-            date: docSlots[slotIndex][0]?.datetime,
-            time: slotTime
-        })
-        
-        // Aquí iría la lógica real de reserva
-        alert('Cita reservada exitosamente')
+        // Simulación de reserva: guardar en localStorage para que MyAppointments la lea
+        const slot = docSlots[slotIndex][0];
+        if (!slot) {
+            toast.error('Selecciona un horario válido');
+            return;
+        }
+        const appointment = {
+            _id: Date.now().toString(),
+            docData: docInfo,
+            slotDate: `${slot.datetime.getDate()}_${slot.datetime.getMonth() + 1}_${slot.datetime.getFullYear()}`,
+            slotTime: slot.time,
+            amount: docInfo.fees,
+            payment: false,
+            cancelled: false,
+            isCompleted: false
+        };
+        // Guardar en localStorage
+        const prev = JSON.parse(localStorage.getItem('myAppointments') || '[]');
+        localStorage.setItem('myAppointments', JSON.stringify([appointment, ...prev]));
+        toast.success('Cita reservada exitosamente');
+        navigate('/my-turn');
     }
 
     useEffect(() => {
