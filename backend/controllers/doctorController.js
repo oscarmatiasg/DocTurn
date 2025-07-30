@@ -36,7 +36,9 @@ const appointmentsDoctor = async (req, res) => {
     try {
 
         const { docId } = req.body
+        console.log("appointmentsDoctor - Received docId:", docId);
         const appointments = await appointmentModel.find({ docId })
+        console.log("appointmentsDoctor - Appointments found:", appointments.length, "Data:", appointments);
 
         res.json({ success: true, appointments })
 
@@ -51,7 +53,7 @@ const appointmentCancel = async (req, res) => {
     try {
 
         const { docId, appointmentId } = req.body
-
+        console.log("appointmentCancel - Received docId:", docId, "appointmentId:", appointmentId);
         const appointmentData = await appointmentModel.findById(appointmentId)
         if (appointmentData && appointmentData.docId === docId) {
             await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
@@ -72,7 +74,7 @@ const appointmentComplete = async (req, res) => {
     try {
 
         const { docId, appointmentId } = req.body
-
+        console.log("appointmentComplete - Received docId:", docId, "appointmentId:", appointmentId);
         const appointmentData = await appointmentModel.findById(appointmentId)
         if (appointmentData && appointmentData.docId === docId) {
             await appointmentModel.findByIdAndUpdate(appointmentId, { isCompleted: true })
@@ -107,8 +109,9 @@ const changeAvailablity = async (req, res) => {
     try {
 
         const { docId } = req.body
-
+        console.log("changeAvailablity - Received docId:", docId);
         const docData = await doctorModel.findById(docId)
+        console.log("changeAvailablity - Doctor data found:", !!docData, "Data:", docData);
         await doctorModel.findByIdAndUpdate(docId, { available: !docData.available })
         res.json({ success: true, message: 'Availablity Changed' })
 
@@ -123,7 +126,9 @@ const doctorProfile = async (req, res) => {
     try {
 
         const { docId } = req.body
+        console.log("doctorProfile - Received docId:", docId);
         const profileData = await doctorModel.findById(docId).select('-password')
+        console.log("doctorProfile - Profile data found:", !!profileData, "Data:", profileData);
 
         res.json({ success: true, profileData })
 
@@ -138,7 +143,7 @@ const updateDoctorProfile = async (req, res) => {
     try {
 
         const { docId, fees, address, available } = req.body
-
+        console.log("updateDoctorProfile - Received docId:", docId);
         await doctorModel.findByIdAndUpdate(docId, { fees, address, available })
 
         res.json({ success: true, message: 'Profile Updated' })
@@ -154,8 +159,9 @@ const doctorDashboard = async (req, res) => {
     try {
 
         const { docId } = req.body
-
+        console.log("doctorDashboard - Received docId:", docId);
         const appointments = await appointmentModel.find({ docId })
+        console.log("doctorDashboard - Appointments found:", appointments.length, "Data:", appointments);
 
         let earnings = 0
 

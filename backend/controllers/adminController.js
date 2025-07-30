@@ -13,7 +13,7 @@ const loginAdmin = async (req, res) => {
         const { email, password } = req.body
 
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-            const token = jwt.sign(email + password, process.env.JWT_SECRET)
+            const token = jwt.sign({id:email}, process.env.JWT_SECRET)
             res.json({ success: true, token })
         } else {
             res.json({ success: false, message: "Invalid credentials" })
@@ -102,12 +102,24 @@ const addDoctor = async (req, res) => {
             date: Date.now()
         }
 
+        // Check if doctor with email already exists
+        const existingDoctor = await doctorModel.findOne({ email })
+        if (existingDoctor) {
+            return res.json({ success: false, message: "Doctor with this email already exists" })
+        }
+
         const newDoctor = new doctorModel(doctorData)
         await newDoctor.save()
         res.json({ success: true, message: 'Doctor Added' })
 
     } catch (error) {
-        console.log(error)
+        console.log('Add Doctor Error:', error)
+        
+        // Handle duplicate key error specifically
+        if (error.code === 11000) {
+            return res.json({ success: false, message: "Doctor with this email already exists" })
+        }
+        
         res.json({ success: false, message: error.message })
     }
 }
@@ -115,12 +127,11 @@ const addDoctor = async (req, res) => {
 // API to get all doctors list for admin panel
 const allDoctors = async (req, res) => {
     try {
-
         const doctors = await doctorModel.find({}).select('-password')
         res.json({ success: true, doctors })
 
     } catch (error) {
-        console.log(error)
+        console.log("Error in allDoctors:", error);
         res.json({ success: false, message: error.message })
     }
 }

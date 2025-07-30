@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
 
-    mongoose.connection.on('connected', () => console.log("DocTurn Database Connected"))
+    mongoose.connection.on('connected', () => console.log("DocTurn Database Connected to: ", mongoose.connection.name))
     await mongoose.connect(`${process.env.MONGODB_URI}`)
 
 }
