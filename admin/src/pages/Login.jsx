@@ -3,6 +3,7 @@ import React, { useContext, useState } from 'react'
 import { DoctorContext } from '../context/DoctorContext'
 import { AdminContext } from '../context/AdminContext'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
   const [state, setState] = useState('Admin')
@@ -10,27 +11,41 @@ const Login = () => {
   const [password, setPassword] = useState('')
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL
-  const { setDToken } = useContext(DoctorContext)
   const { setAToken } = useContext(AdminContext)
+  const { setDToken } = useContext(DoctorContext)
+  const navigate = useNavigate()
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
     if (state === 'Admin') {
-      const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password })
-      if (data.success) {
-        setAToken(data.token)
-        localStorage.setItem('aToken', data.token)
-      } else {
-        toast.error(data.message)
+      try {
+        const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password })
+
+        if (data.success) {
+          setAToken(data.token);
+          localStorage.setItem('aToken', data.token);
+          navigate('/');
+        } else {
+          toast.error(data.message || "An unknown error occurred.");
+        }
+      } catch (error) {
+        toast.error("Network or server error. Check the browser and backend console.");
+        console.error("Admin login failed:", error);
       }
     } else {
-      const { data } = await axios.post(backendUrl + '/api/doctor/login', { email, password })
-      if (data.success) {
-        setDToken(data.token)
-        localStorage.setItem('dToken', data.token)
-      } else {
-        toast.error(data.message)
+      try {
+        const { data } = await axios.post(backendUrl + '/api/doctor/login', { email, password })
+        if (data.success) {
+          setDToken(data.token)
+          localStorage.setItem('dToken', data.token)
+          navigate('/doctor-dashboard')
+        } else {
+          toast.error(data.message)
+        }
+      } catch (error) {
+        toast.error("Error de conexión. Revisa la consola del backend.");
+        console.error("Doctor login failed:", error);
       }
     }
   }

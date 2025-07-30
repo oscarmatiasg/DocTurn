@@ -10,11 +10,15 @@ const Navbar = () => {
   const navigate = useNavigate()
 
   const logout = () => {
-    navigate('/')
-    dToken && setDToken('')
-    dToken && localStorage.removeItem('dToken')
-    aToken && setAToken('')
-    aToken && localStorage.removeItem('aToken')
+    if (dToken) {
+      setDToken('')
+      localStorage.removeItem('dToken')
+    }
+    if (aToken) {
+      setAToken('')
+      localStorage.removeItem('aToken')
+    }
+    navigate('/login') // Redirect to login page after logout
   }
 
   return (

@@ -8,6 +8,11 @@ const Sidebar = () => {
   const { dToken } = useContext(DoctorContext)
   const { aToken } = useContext(AdminContext)
 
+  // Only render sidebar content if aToken or dToken exists
+  if (!aToken && !dToken) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-white border-r border-gray-200 w-64">
       {/* Header */}
@@ -25,7 +30,7 @@ const Sidebar = () => {
         {aToken && (
           <ul className="space-y-2">
             <NavLink 
-              to={'/admin-dashboard'} 
+              to={'/'} 
               className={({ isActive }) => `flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${
                 isActive 
                   ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' 
@@ -68,7 +73,7 @@ const Sidebar = () => {
             </NavLink>
 
             <NavLink 
-              to={'/doctor-list'} 
+              to={'/doctors-list'} 
               className={({ isActive }) => `flex items-center gap-3 py-3 px-4 rounded-lg transition-all duration-200 ${
                 isActive 
                   ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' 
