@@ -137,7 +137,7 @@ const Sidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+      <div className="mt-auto p-4 border-t border-gray-200">
         <div className="text-center">
           <p className="text-xs text-gray-500">DocTurn Admin Panel</p>
           <p className="text-xs text-gray-400 mt-1">v1.0.0</p>
