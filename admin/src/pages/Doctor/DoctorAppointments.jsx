@@ -27,7 +27,7 @@ const DoctorAppointments = () => {
           <p>Payment</p>
           <p>Age</p>
           <p>Date & Time</p>
-          <p>Fees</p>
+          <p>Doctor</p>
           <p>Action</p>
         </div>
         {appointments.map((item, index) => (
