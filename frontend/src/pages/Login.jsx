@@ -1,193 +1,121 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../context/Appcontex'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
+import React, { useContext, useEffect, useState } from 'react';
+import { AppContext } from '../context/Appcontex';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [state, setState] = useState('Sign Up')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [state, setState] = useState('Login'); // Default to Login
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const navigate = useNavigate()
-  const { backendUrl, token, setToken } = useContext(AppContext)
+  const navigate = useNavigate();
+  const { backendUrl, token, setToken } = useContext(AppContext);
+
+  // Debug logging
+  console.log('🔍 Login component rendered');
+  console.log('🌐 Backend URL:', backendUrl);
+  console.log('🎫 Current token:', token ? 'exists' : 'null');
+  console.log('🔧 Context values:', { backendUrl, token: !!token, setToken: !!setToken });
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    console.log('🔥 onSubmitHandler called');
+    console.log('📊 Form data:', { email, password, state, backendUrl });
 
-    if (state === 'Sign Up') {
-      const { data } = await axios.post(backendUrl + '/api/user/register', { name, email, password })
-
-      if (data.success) {
-        localStorage.setItem('token', data.token)
-        setToken(data.token)
-      } else {
-        toast.error(data.message)
-      }
-    } else {
-      const { data } = await axios.post(backendUrl + '/api/user/login', { email, password })
-
-      if (data.success) {
-        localStorage.setItem('token', data.token)
-        setToken(data.token)
-      } else {
-        toast.error(data.message)
-      }
+    if (!backendUrl) {
+      console.error('❌ Backend URL is not defined');
+      toast.error('Error de configuración: URL del backend no definida');
+      return;
     }
-  }
+
+    if (!email || !password) {
+      console.error('❌ Email or password is empty');
+      toast.error('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      console.log('🚀 Making API request...');
+      
+      if (state === 'Sign Up') {
+        if (!name) {
+          toast.error('Por favor ingresa tu nombre');
+          return;
+        }
+        console.log('📝 Registering user...');
+        const { data } = await axios.post(backendUrl + '/api/user/register', { name, email, password });
+        console.log('📥 Register response:', data);
+        
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          setToken(data.token);
+          toast.success('Cuenta creada exitosamente');
+        } else {
+          toast.error(data.message);
+        }
+      } else { // 'Login' state
+        console.log('🔐 Logging in user...');
+        const { data } = await axios.post(backendUrl + '/api/user/login', { email, password });
+        console.log('📥 Login response:', data);
+        
+        if (data.success) {
+          console.log('✅ Login successful, setting token...');
+          localStorage.setItem('token', data.token);
+          setToken(data.token);
+          toast.success('Inicio de sesión exitoso');
+        } else {
+          console.log('❌ Login failed:', data.message);
+          toast.error(data.message);
+        }
+      }
+    } catch (error) {
+      console.error('💥 Login/Register error:', error);
+      console.error('📋 Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      toast.error(error.response?.data?.message || 'Error de conexión. Verifica que el servidor esté funcionando.');
+    }
+  };
 
   useEffect(() => {
     if (token) {
-      navigate('/')
+      navigate('/');
     }
-  }, [token])
+  }, [token]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+    <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center'>
+      <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-[#5E5E5E] text-sm shadow-lg'>
+        <p className='text-2xl font-semibold'>{state === 'Sign Up' ? 'Crear Cuenta' : 'Iniciar Sesión'}</p>
+        <p>Por favor {state === 'Sign Up' ? 'regístrate' : 'inicia sesión'} para reservar citas</p>
+        {state === 'Sign Up' && (
+          <div className='w-full '>
+            <p>Nombre Completo</p>
+            <input onChange={(e) => setName(e.target.value)} value={name} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="text" required />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {state === 'Sign Up' ? 'Crear Cuenta' : 'Iniciar Sesión'}
-          </h1>
-          <p className="text-gray-600">
-            {state === 'Sign Up' 
-              ? 'Únete a DocTurn para reservar tus citas médicas' 
-              : 'Accede a tu cuenta para gestionar tus citas'
-            }
-          </p>
+        )}
+        <div className='w-full '>
+          <p>Email</p>
+          <input onChange={(e) => setEmail(e.target.value)} value={email} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="email" required />
         </div>
-
-        {/* Form */}
-        <form onSubmit={onSubmitHandler} className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="space-y-6">
-            {/* Name Field - Only for Sign Up */}
-            {state === 'Sign Up' && (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Nombre Completo
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <input
-                    onChange={(e) => setName(e.target.value)}
-                    value={name}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    type="text"
-                    placeholder="Ingresa tu nombre completo"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Email Field */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Correo Electrónico
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <input
-                  onChange={(e) => setEmail(e.target.value)}
-                  value={email}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  type="email"
-                  placeholder="tu@email.com"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Contraseña
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <input
-                  onChange={(e) => setPassword(e.target.value)}
-                  value={password}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 shadow-sm hover:shadow-md"
-            >
-              {state === 'Sign Up' ? 'Crear Cuenta' : 'Iniciar Sesión'}
-            </button>
-
-            {/* Toggle State */}
-            <div className="text-center">
-              {state === 'Sign Up' ? (
-                <p className="text-gray-600">
-                  ¿Ya tienes una cuenta?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setState('Login')}
-                    className="text-blue-600 hover:text-blue-700 font-medium underline transition-colors duration-200"
-                  >
-                    Inicia sesión aquí
-                  </button>
-                </p>
-              ) : (
-                <p className="text-gray-600">
-                  ¿No tienes una cuenta?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setState('Sign Up')}
-                    className="text-blue-600 hover:text-blue-700 font-medium underline transition-colors duration-200"
-                  >
-                    Regístrate aquí
-                  </button>
-                </p>
-              )}
-            </div>
-          </div>
-        </form>
-
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-gray-500">
-            Al continuar, aceptas nuestros{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-700 underline">
-              Términos de Servicio
-            </a>{' '}
-            y{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-700 underline">
-              Política de Privacidad
-            </a>
-          </p>
+        <div className='w-full '>
+          <p>Contraseña</p>
+          <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="password" required />
         </div>
+        <button type="submit" className='bg-blue-600 text-white w-full py-2 my-2 rounded-md text-base'>
+          {state === 'Sign Up' ? 'Crear Cuenta' : 'Iniciar Sesión'}
+        </button>
+        {state === 'Sign Up'
+          ? <p>¿Ya tienes una cuenta? <span onClick={() => setState('Login')} className='text-blue-600 underline cursor-pointer'>Inicia sesión aquí</span></p>
+          : <p>¿No tienes una cuenta? <span onClick={() => setState('Sign Up')} className='text-blue-600 underline cursor-pointer'>Regístrate aquí</span></p>
+        }
       </div>
-    </div>
-  )
+    </form>
+  );
 }
 
-export default Login
+export default Login;

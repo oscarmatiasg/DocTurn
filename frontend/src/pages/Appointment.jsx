@@ -1,8 +1,10 @@
+
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppContext } from '../context/Appcontex';
 import { assets } from '../assets/assets';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const Appointment = () => {
     const { docId } = useParams()
@@ -75,28 +77,40 @@ const Appointment = () => {
         setDocSlots(slotsArray);
     }
 
+    const { userData, backendUrl, token } = useContext(AppContext);
     const bookAppointment = async () => {
-        // Simulación de reserva: guardar en localStorage para que MyAppointments la lea
         const slot = docSlots[slotIndex][0];
         if (!slot) {
             toast.error('Selecciona un horario válido');
             return;
         }
-        const appointment = {
-            _id: Date.now().toString(),
-            docData: docInfo,
-            slotDate: `${slot.datetime.getDate()}_${slot.datetime.getMonth() + 1}_${slot.datetime.getFullYear()}`,
-            slotTime: slot.time,
-            amount: docInfo.fees,
-            payment: false,
-            cancelled: false,
-            isCompleted: false
-        };
-        // Guardar en localStorage
-        const prev = JSON.parse(localStorage.getItem('myAppointments') || '[]');
-        localStorage.setItem('myAppointments', JSON.stringify([appointment, ...prev]));
-        toast.success('Cita reservada exitosamente');
-        navigate('/my-turn');
+        if (!userData || !userData._id) {
+            toast.error('Debes iniciar sesión para reservar una cita.');
+            navigate('/login');
+            return;
+        }
+        try {
+            const slotDate = `${slot.datetime.getDate()}_${slot.datetime.getMonth() + 1}_${slot.datetime.getFullYear()}`;
+            const slotTime = slot.time;
+            const res = await axios.post(
+                backendUrl + '/api/user/book-appointment',
+                {
+                    userId: userData._id,
+                    docId: docInfo._id,
+                    slotDate,
+                    slotTime
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.data.success) {
+                toast.success('Cita reservada exitosamente');
+                navigate('/my-turn');
+            } else {
+                toast.error(res.data.message || 'Error al reservar la cita');
+            }
+        } catch (err) {
+            toast.error('Error al conectar con el backend.');
+        }
     }
 
     useEffect(() => {

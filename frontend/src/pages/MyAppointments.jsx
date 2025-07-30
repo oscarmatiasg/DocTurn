@@ -1,61 +1,89 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { AppContext } from '../context/Appcontex';
 
 const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
 const MyAppointments = () => {
     const navigate = useNavigate();
+    const { getUserAppointments, simulatePayment, cancelAppointment, token, backendUrl } = useContext(AppContext);
+    
+    // Debug logging
+    console.log('MyAppointments component loaded');
+    console.log('Context functions available:', { 
+        getUserAppointments: !!getUserAppointments, 
+        simulatePayment: !!simulatePayment, 
+        cancelAppointment: !!cancelAppointment,
+        token: !!token,
+        backendUrl 
+    });
     const [appointments, setAppointments] = useState([]);
     const [payment, setPayment] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const slotDateFormat = (slotDate) => {
         const dateArray = slotDate.split('_');
         return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2];
     };
 
-    // Leer citas simuladas de localStorage
-    const getUserAppointments = () => {
-        const local = JSON.parse(localStorage.getItem('myAppointments') || '[]');
-        setAppointments(local);
-    };
-
-    // Simular pago online
-
-    const simulatePayment = (appointmentId) => {
-        // Marcar la cita como pagada
-        const updated = appointments.map(a => a._id === appointmentId ? { ...a, payment: true } : a);
-        setAppointments(updated);
-        localStorage.setItem('myAppointments', JSON.stringify(updated));
-
-        // Eliminar el turno reservado de la lista de turnos disponibles del doctor (en localStorage)
-        const paidAppointment = updated.find(a => a._id === appointmentId);
-        if (paidAppointment) {
-            // Guardar los turnos ocupados por doctor en localStorage
-            const key = `bookedSlots_${paidAppointment.docData._id}`;
-            const prev = JSON.parse(localStorage.getItem(key) || '[]');
-            prev.push({ slotDate: paidAppointment.slotDate, slotTime: paidAppointment.slotTime });
-            localStorage.setItem(key, JSON.stringify(prev));
+    // Fetch appointments from backend
+    const fetchAppointments = async () => {
+        console.log('Fetching appointments...');
+        setLoading(true);
+        try {
+            if (getUserAppointments) {
+                const appts = await getUserAppointments();
+                console.log('Fetched appointments:', appts);
+                setAppointments(appts || []);
+            } else {
+                console.error('getUserAppointments function not available');
+                toast.error('Error: Function not available');
+            }
+        } catch (error) {
+            console.error('Error in fetchAppointments:', error);
+            toast.error('Error loading appointments');
         }
-        toast.success('Pago simulado exitosamente. Turno agendado.');
+        setLoading(false);
     };
 
-    // Simular cancelación
-    const cancelAppointment = (appointmentId) => {
-        const updated = appointments.map(a => a._id === appointmentId ? { ...a, cancelled: true } : a);
-        setAppointments(updated);
-        localStorage.setItem('myAppointments', JSON.stringify(updated));
-        toast.info('Cita cancelada');
+    // Simulate payment via backend
+    const handleSimulatePayment = async (appointmentId) => {
+        const success = await simulatePayment(appointmentId, 'online');
+        if (success) fetchAppointments();
+    };
+
+    // Cancel appointment via backend
+    const handleCancelAppointment = async (appointmentId) => {
+        const success = await cancelAppointment(appointmentId);
+        if (success) fetchAppointments();
+    };
+
+    // Refrescar citas: recargar desde backend
+    const refreshAppointments = () => {
+        fetchAppointments();
+        toast.info('Citas refrescadas.');
     };
 
     useEffect(() => {
-        getUserAppointments();
-    }, []);
+        fetchAppointments();
+    }, [token]);
 
     return (
         <div className="max-w-2xl mx-auto px-2 py-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">My appointments</h2>
-            {appointments.length === 0 ? (
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">My appointments</h2>
+                <button
+                    onClick={refreshAppointments}
+                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium border border-gray-300 hover:bg-gray-200 transition-colors"
+                >
+                    Refrescar citas
+                </button>
+            </div>
+            {loading ? (
+                <div className="text-center py-16 text-gray-500">Cargando citas...</div>
+            ) : appointments.length === 0 ? (
                 <div className="text-center py-16">
                     <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,27 +102,27 @@ const MyAppointments = () => {
             ) : (
                 <div className="divide-y divide-gray-200">
                     {appointments.map((item, index) => (
-                        <div key={index} className="flex flex-col md:flex-row items-center gap-6 py-6">
+                        <div key={item._id || index} className="flex flex-col md:flex-row items-center gap-6 py-6">
                             <img
                                 className="w-28 h-28 rounded-lg object-cover bg-blue-50 border"
-                                src={item.docData.image}
-                                alt={item.docData.name}
+                                src={item.docData?.image}
+                                alt={item.docData?.name}
                             />
                             <div className="flex-1 w-full">
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                                     <div>
-                                        <h3 className="text-lg font-bold text-gray-900">Dr. {item.docData.name}</h3>
-                                        <p className="text-gray-700 text-sm font-medium mb-1">{item.docData.speciality}</p>
+                                        <h3 className="text-lg font-bold text-gray-900">Dr. {item.docData?.name}</h3>
+                                        <p className="text-gray-700 text-sm font-medium mb-1">{item.docData?.speciality}</p>
                                         <div className="text-xs text-gray-500">
-                                            <span className="font-semibold">Address:</span> {item.docData.address.line1}
-                                            {item.docData.address.line2 && <span>, {item.docData.address.line2}</span>}
+                                            <span className="font-semibold">Address:</span> {item.docData?.address?.line1}
+                                            {item.docData?.address?.line2 && <span>, {item.docData.address.line2}</span>}
                                         </div>
                                         <div className="text-xs text-gray-500 mt-1">
                                             <span className="font-semibold">Date & Time:</span> {slotDateFormat(item.slotDate)} | {item.slotTime}
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-2 md:items-end mt-2 md:mt-0">
-                                        {!item.cancelled && !item.payment && !item.isCompleted && payment !== item._id && (
+                                        {!item.payment && !item.isCompleted && payment !== item._id && (
                                             <>
                                                 <span className="inline-block px-4 py-2 rounded bg-yellow-50 text-yellow-700 border border-yellow-200 font-medium mb-2">Pending Payment</span>
                                                 <button
@@ -105,27 +133,24 @@ const MyAppointments = () => {
                                                 </button>
                                             </>
                                         )}
-                                        {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && (
+                                        {!item.payment && !item.isCompleted && payment === item._id && (
                                             <button
-                                                onClick={() => simulatePayment(item._id)}
+                                                onClick={() => handleSimulatePayment(item._id)}
                                                 className="border border-blue-600 text-blue-600 px-6 py-2 rounded hover:bg-blue-50 font-medium"
                                                 disabled={payment === item._id}
                                             >
-                                                Confirm Simulated Payment
+                                                Confirm Payment
                                             </button>
                                         )}
-                                        {!item.cancelled && item.payment && !item.isCompleted && (
+                                        {item.payment && !item.isCompleted && (
                                             <span className="inline-block px-4 py-2 rounded bg-green-50 text-green-700 border border-green-200 font-medium">Paid</span>
                                         )}
                                         {item.isCompleted && (
                                             <span className="inline-block px-4 py-2 rounded bg-green-50 text-green-700 border border-green-200 font-medium">Completed</span>
                                         )}
-                                        {item.cancelled && (
-                                            <span className="inline-block px-4 py-2 rounded bg-red-50 text-red-700 border border-red-200 font-medium">Cancelled</span>
-                                        )}
-                                        {!item.cancelled && !item.isCompleted && (
+                                        {!item.isCompleted && (
                                             <button
-                                                onClick={() => cancelAppointment(item._id)}
+                                                onClick={() => handleCancelAppointment(item._id)}
                                                 className="border border-red-500 text-red-500 px-6 py-2 rounded hover:bg-red-50 font-medium"
                                             >
                                                 Cancel appointment

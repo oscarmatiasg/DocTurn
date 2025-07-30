@@ -9,7 +9,7 @@ import Login from './pages/Login'
 import Doctors from './pages/Doctors'
 import Appointment from './pages/Appointment'
 import MyProfile from './pages/MyProfile'
-import MyTurn from './pages/MyTurn'
+import MyAppointments from './pages/MyAppointments'
 import Navb from './components/Navb'
 import Footer from './components/Footer'
 
@@ -25,7 +25,7 @@ const App = () => {
         <Route path='/login' element={<Login />} />
         <Route path='/doctors' element={<Doctors />} />
         <Route path='/doctors/:specialty' element={<Doctors />} />
-        <Route path='/my-turn' element={<MyTurn />} />
+        <Route path='/my-turn' element={<MyAppointments />} />
         <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/turns/:docId' element={<Appointment />} />
       </Routes>
