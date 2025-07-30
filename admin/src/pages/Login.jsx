@@ -10,7 +10,7 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://backend-docturn.vercel.app'
   const { setAToken } = useContext(AdminContext)
   const { setDToken } = useContext(DoctorContext)
   const navigate = useNavigate()

@@ -26,4 +26,5 @@ app.get("/", (req, res) => {
   res.send("DocTurn API Working")
 });
 
-app.listen(port, () => console.log(`DocTurn Server started on PORT:${port}`))
+// Export the app for Vercel serverless
+export default app;

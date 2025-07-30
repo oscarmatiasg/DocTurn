@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 export const AppContext = createContext()
 
 const AppProvider = (props) => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://backend-docturn.vercel.app'
     const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : '')
     const [userData, setUserData] = useState(null)
     const [doctors, setDoctors] = useState([])

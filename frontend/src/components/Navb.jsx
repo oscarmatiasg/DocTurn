@@ -41,7 +41,7 @@ const Navb = () => {
             </ul>
 
             <div className='flex items-center gap-4'>
-                <a href="http://localhost:5174" target="_blank" rel="noopener noreferrer" className='bg-gray-200 text-gray-800 px-6 py-3 rounded-md font-medium hover:bg-gray-300 cursor-pointer transition-all duration-300 hidden md:block'>
+                <a href="https://admin-docturn.vercel.app/" target="_blank" rel="noopener noreferrer" className='bg-gray-200 text-gray-800 px-6 py-3 rounded-md font-medium hover:bg-gray-300 cursor-pointer transition-all duration-300 hidden md:block'>
                     Panel Docturn
                 </a>
                 {token && userData ? (
